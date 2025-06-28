@@ -1,0 +1,26 @@
+{
+    "id": "BE8F3B97",
+    "path": "~/Documents/projects/doors_2025/src/get_setting_stability.R",
+    "project_path": "src/get_setting_stability.R",
+    "type": "r_source",
+    "hash": "452315340",
+    "contents": "",
+    "dirty": false,
+    "created": 1751093828219.0,
+    "source_on_save": false,
+    "relative_order": 3,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "33,10",
+        "scrollLine": "21"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1751097935,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1751097935813,
+    "read_only": false,
+    "read_only_alternatives": []
+}
