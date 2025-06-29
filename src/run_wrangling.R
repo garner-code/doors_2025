@@ -173,7 +173,7 @@ if (exp == 'exp-flex'){
            -starts_with('slips_')) %>%
     ungroup()
 
-  fnl <- file.path(project_path, "res_s", paste(paste(exp, "avg", sep = "_"), ".csv", sep = ""))
+  fnl <- file.path(project_path, "res", paste(paste(exp, "avg", sep = "_"), ".csv", sep = ""))
   write_csv(res, fnl)
 }
 
