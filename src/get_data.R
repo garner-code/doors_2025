@@ -1,9 +1,9 @@
 get_data <- function(data_path, exp, sub, ses, train_type, train_doors) {
   # reads in trial info and sample data from 'trls' and 'beh' files and formats into a
   # one-row-per-trial data frame
-
+  multi <- NA # this will only get loaded with things when exp == exp-multi and ses == ses-test
   success <- c()
-  if (!grepl('ses-learn', ses)) {
+  if (!grepl('ses-learn*', ses)) {
     success <- rbind(success, file.exists(file.path(data_path, sub, ses, "beh", paste(sub, ses,
       "task-mforage_trls.tsv",
       sep = "_"
@@ -12,6 +12,11 @@ get_data <- function(data_path, exp, sub, ses, train_type, train_doors) {
       "task-mforage_beh.tsv",
       sep = "_"
     ))))
+    if (grepl('exp-multi', exp) & grepl('ses-test', ses)){
+      success <- rbind(success, file.exists(file.path(data_path, sub, ses, "beh", paste(sub, ses,
+       "task-mforage_mt-trls.tsv",
+       sep = "_"))))
+    }
   } else {
     haus <- c("house-1", "house-2")
     for (h in haus) {
@@ -28,14 +33,20 @@ get_data <- function(data_path, exp, sub, ses, train_type, train_doors) {
   
   if (all(success)) {
     
-    if (!grepl('ses-learn', ses)) {
+    if (!grepl('ses-learn*', ses)) {
       trials <- read.table(file.path(data_path, sub, ses, "beh", paste(sub, ses, "task-mforage_trls.tsv",
         sep = "_"
       )), header = TRUE)
       resps <- read.table(file.path(data_path, sub, ses, "beh", paste(sub, ses, "task-mforage_beh.tsv",
         sep = "_"
       )), header = TRUE)
-    } else {
+      if (grepl('exp-multi', exp) & grepl('ses-test', ses)){
+        multi <- read.table(file.path(data_path, sub, ses, "beh", paste(sub, ses, 
+            "task-mforage_mt-trls.tsv",
+            sep = "_"
+        )), header = TRUE)
+      }
+      } else {
       trials <- read.table(file.path(data_path, sub, ses, "beh", paste(sub, ses, "house-1",
         "task-mforage_trls.tsv",
         sep = "_"
@@ -94,27 +105,21 @@ get_data <- function(data_path, exp, sub, ses, train_type, train_doors) {
         rename(ses = test)
     }
     
-    # find the time of target offset for each trial 
-    # and set it as the onset for the next trial
-    # note this gives us the values from trial 2 onwards
+    # find the time of the onset of each trial, to
+    # be used to calculate the RT of the first response on every trial
     ons <- resps %>% #
       group_by(sub, ses, t) %>% 
-      summarise(start = min(onset), # start gives you the first timestamp in the trial 
-                on = max(onset)) %>% # this gives the last timestamp for the trial
-      ungroup() %>%
-      group_by(sub, ses) %>%
-      mutate(trial_start = lag(on, n=1),
-             trial_start = case_when(is.na(trial_start) ~ start, .default=trial_start)) %>%
-      select(sub, ses, t, trial_start)
+      summarise(trial_start = min(onset)) %>% # this gives the last timestamp for the trial
+      ungroup() 
     
     resps <- resps %>%
-      filter(door > 0) # we only care about samples in which people hovered or clicked on a door
+      filter(door > 0) # we only care about samples in which people clicked on a door
     
     ### find the important events - KG has amended to make simpler
     resps <- resps %>%
       mutate(on = c(onset[[1]], 
-                    case_when(diff(open_d) != 0 ~ onset[2:length(onset)], 
-                              diff(door) != 0 ~ onset[2:length(onset)], 
+                    case_when(diff(open_d) != 0 ~ onset[2:length(onset)], # this code is losing trials where 
+                              diff(door) != 0 ~ onset[2:length(onset)], # you hit the same button twice & the target is there
                               .default = NA))) %>%
       mutate(off = c(case_when(diff(open_d) != 0 ~ onset[1:length(onset) - 1], 
                                diff(door) != 0 ~ onset[1:length(onset) - 1], 
@@ -125,16 +130,21 @@ get_data <- function(data_path, exp, sub, ses, train_type, train_doors) {
       mutate(off = lead(off)) %>%
       filter(!is.na(on)) 
     
+    # Now I want to filter for only the correct door selections
+    resps <- resps %>% filter(open_d == 1) %>%
+      group_by(t) %>%
+      mutate(start = lag(off)) %>%
+      ungroup()
+    
+    # now add the trial onset to the NA data 
+    resps <- resps %>% left_join(ons, by = c('sub', 'ses', 't')) %>%
+      mutate(start = coalesce(start, trial_start)) %>%
+      select(-trial_start)
+    
     trials <- unique(resps$t)
     resps <- resps %>%
       mutate(subses = case_when(t %in% trials[1:round(length(trials) / 2)] ~ 1, .default = 2), .after=str_split_i(ses, '-', 1)) # 2
 
-    ### KG. Now I am going to take ons, which has the start of each trial, combine it with
-    ### resps, and subtract the on and off values from the trial start value
-    resps <- inner_join(resps, ons, by=c('sub', 'ses', 't')) %>%
-               mutate(on = on-trial_start, 
-                      off = off-trial_start) %>%
-              select(!trial_start)
     ### code door by whether it's part of current context, other context, or no context
     doors <- resps %>%
       filter(door_cc == 1) %>%
@@ -177,7 +187,7 @@ get_data <- function(data_path, exp, sub, ses, train_type, train_doors) {
       mutate(train_type = c(kronecker(matrix(1, nrow(resps), 1), train_type)))
     
 
-    return(list(resps=resps, ons=ons))
+    return(list(resps=resps, ons=ons, multi=multi))
   } else {
     stop(paste("check data for", file.path(data_path, exp, sub, ses)))
   }
