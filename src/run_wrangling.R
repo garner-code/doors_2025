@@ -14,14 +14,17 @@ source(file.path("src","get_setting_stability.R"))
 source(file.path("src","get_transition_probabilities.R"))
 source(file.path("src","get_learned_doors.R"))
 source(file.path("src", "get_rts.R"))
+source(file.path("src", "join_multi_data.R"))
 
 ### settings
 
 # !you will want to update these settings a lot during piloting, when the task code or the way you
 # test changes, or when you test participants on different subsets of the task phases
 version <- ''
-exp <- 'exp-flex'
-sess <- c("ses-learn","ses-learn2","ses-train","ses-test")
+exp <- 'exp-multi' #'exp-multi' #'exp-flex'
+sess <- c("ses-learn","ses-learn2","ses-train","ses-test") # these sessions are common to 
+# both experiments so are the only 2 that need to be listed here. the sessions from the 
+# multitask experiment are dealt with in the code below
 
 ### paths
 
@@ -52,9 +55,15 @@ subs <- unique(str_split_i(files, "/", 1))
 # make an empty data frame with all the variables (columns) that we will want
 grp_data <- data.frame(
   sub = integer(), ses = integer(), subses = integer(), t = integer(), context = integer(), door = integer(),
-  door_cc = integer(), door_oc = integer(), on = numeric(), off = numeric(), 
+  door_cc = integer(), door_oc = integer(), on = numeric(), off = numeric(), start = numeric(),
   switch = integer(), train_type = integer())
 
+# make an empty data frame for the multitasking conditions (note that this will not
+# get used in the exp-flex exp, only the exp-multi one)
+grp_multi <- data.frame(
+  sub = integer(), ses = integer(), t = integer(), context = integer(),
+  mem_tgt_trial = integer(), mem_probe_trial = integer(), mem_context = integer()
+)
 # create empty data frame for the response time data # KG. commented out as now deal with during get_data
 # grp_ons <- data.frame(
 #   sub = integer(), ses = integer(), t = integer(), context = integer(), on = integer()
@@ -86,17 +95,11 @@ for (sub in subs) {
     
       data <- get_data(data_path, exp, sub, ses, train_type, train_doors) # load and format raw data
       grp_data <- rbind(grp_data, data$resps) # add to the 'grp_data' data frame so we end up with all subjects and sessions in one spreadsheet
+      if (grepl('exp-multi', exp) & grepl('ses-test', ses)){
+        grp_multi <- rbind(grp_multi, data$multi)
+      }
     }
   }
-
-# track whether context-incorrect clicks in the test phase land on doors that were learned in the train phase
-# if(exp=="exp_lt"){
-#   door_lc <- get_learned_doors(grp_data)
-#   grp_data <- grp_data %>% add_column(door_lc = door_lc, .after="door_oc")
-# }else{
-#   grp_data <- grp_data %>% mutate(door_lc = c(kronecker(matrix(1, nrow(grp_data), 1), NA)), .after="door_oc")
-# }
-#grp_data <- grp_data %>% mutate(door_lc = c(kronecker(matrix(1, nrow(grp_data), 1), NA)), .after="door_oc") # not needed for 2025, as no learning transfer
 grp_data <- get_setting_stability(grp_data) # KG: re-wrote to label for 2025
 grp_data <- grp_data %>% mutate(door_nc = case_when(door_cc==1 ~ 0, door_oc == 1 ~ 0, .default=1), .after="door_oc")
 
@@ -122,7 +125,7 @@ res <- grp_data %>%
 
 
 # get the different types of RTs, cleaning is exp dependent
-rt_dat <- get_rts(grp_data, exp)
+rt_dat <- get_rts(grp_data, exp, grp_multi)
 # add the RTs to the res data frame
 res <- inner_join(res, rt_dat, by=c("sub", "ses", "subses", "switch", "t", "context", "train_type"))
 
@@ -139,8 +142,7 @@ if (exp == 'exp-flex'){
     summarise(
       across(
         .cols = where(is.numeric),
-        .fns = list(mean = ~mean(.x, na.rm = TRUE),
-                    sd = ~sd(.x, na.rm = TRUE)),
+        .fns = list(mean = ~mean(.x, na.rm = TRUE)),
         .names = "{.col}_{.fn}"
       )
     ) %>%
@@ -149,7 +151,9 @@ if (exp == 'exp-flex'){
            -starts_with('n_'),
            -starts_with('sticks_'),
            -starts_with('slips_')) %>%
-    ungroup()
+    ungroup() %>%
+    filter(ses != 1) %>%
+    filter(ses != 10)
   fnl <- file.path(project_path, "res", paste(paste(exp, "avg-ss", sep = "_"), ".csv", sep = ""))
   write_csv(res_ss, fnl)
   
@@ -161,8 +165,7 @@ if (exp == 'exp-flex'){
     summarise(
       across(
         .cols = where(is.numeric),
-        .fns = list(mean = ~mean(.x, na.rm = TRUE),
-                    sd = ~sd(.x, na.rm = TRUE)),
+        .fns = list(mean = ~mean(.x, na.rm = TRUE)),
         .names = "{.col}_{.fn}"
       )
     ) %>%
@@ -171,10 +174,59 @@ if (exp == 'exp-flex'){
            -starts_with('n_'),
            -starts_with('sticks_'),
            -starts_with('slips_')) %>%
-    ungroup()
+    ungroup() %>%
+    filter(ses != 1) %>%
+    filter(ses != 10)
 
   fnl <- file.path(project_path, "res", paste(paste(exp, "avg", sep = "_"), ".csv", sep = ""))
-  write_csv(res, fnl)
+  write_csv(res_s, fnl)
+} else {
+  
+  res_ss <- res %>%
+    ungroup() %>% 
+    group_by(sub, ses, subses, switch, train_type, multi_trial, multi_cond) %>%
+    summarise(
+      across(
+        .cols = where(is.numeric),
+        .fns = list(mean = ~mean(.x, na.rm = TRUE)),
+        .names = "{.col}_{.fn}"
+      )
+    ) %>%
+    select(-starts_with("t_"),
+           -starts_with("context_"),
+           -starts_with('n_'),
+           -starts_with('sticks_'),
+           -starts_with('slips_')) %>%
+    ungroup() %>%
+    filter(!(ses == 3 & switch == 1)) %>%
+    filter(ses != 1)  %>%
+    filter(ses != 10)
+    fnl <- file.path(project_path, "res", paste(paste(exp, "avg-ss", sep = "_"), ".csv", sep = ""))
+    write_csv(res_ss, fnl)
+  
+  
+    res_s <- res %>%
+      ungroup() %>% 
+      select(!subses) %>%
+      group_by(sub, ses, switch, train_type, multi_trial, multi_cond) %>%
+      summarise(
+        across(
+          .cols = where(is.numeric),
+          .fns = list(mean = ~mean(.x, na.rm = TRUE)),
+          .names = "{.col}_{.fn}"
+        )
+      ) %>%
+      select(-starts_with("t_"),
+             -starts_with("context_"),
+             -starts_with('n_'),
+             -starts_with('sticks_'),
+             -starts_with('slips_')) %>%
+      ungroup() %>%
+      filter(!(ses == 3 & switch == 1)) %>%
+      filter(ses != 1)  %>%
+      filter(ses != 10)
+    fnl <- file.path(project_path, "res", paste(paste(exp, "avg", sep = "_"), ".csv", sep = ""))
+    write_csv(res_s, fnl)
 }
 
 
