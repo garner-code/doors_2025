@@ -38,7 +38,7 @@ if (!dir.exists(file.path(project_path, "res"))) {
 
 # !you will need to change the data path to match the location of OneDrive on your personal
 # computer
-file_path <- "~/Downloads/hons-2025"
+file_path <- "data"
 exp_path <- str_glue("/{exp}/{version}")
 data_path <- file.path(file_path + exp_path)
 
