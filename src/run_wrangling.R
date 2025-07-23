@@ -21,7 +21,7 @@ source(file.path("src", "join_multi_data.R"))
 # !you will want to update these settings a lot during piloting, when the task code or the way you
 # test changes, or when you test participants on different subsets of the task phases
 version <- ''
-exp <- 'exp-multi' #'exp-multi' #'exp-flex'
+exp <- 'exp-flex' #'exp-multi' #'exp-flex'
 sess <- c("ses-learn","ses-learn2","ses-train","ses-test") # these sessions are common to 
 # both experiments so are the only 2 that need to be listed here. the sessions from the 
 # multitask experiment are dealt with in the code below

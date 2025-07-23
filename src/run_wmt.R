@@ -6,8 +6,6 @@ library(data.table)
 library(tidyverse)
 library(magrittr)
 library(ggplot2)
-# library(ggthemes)
-# library(ggpubr)
 library(ggsci)
 
 ### settings
@@ -46,36 +44,36 @@ write_csv(dt_wmt_avg, fln)
 
 
 ### calculate averages
-dt_wmt_avg[stage == 4, 
-           .(MeanAcc = mean(accuracy_mean),
-             MeanRT = mean(rt_mean)),
-           by = cond]
+# dt_wmt_avg[stage == 4, 
+#            .(MeanAcc = mean(accuracy_mean),
+#              MeanRT = mean(rt_mean)),
+#            by = cond]
 
 ### plot
-label_sz <- 20
-mk_sz <- 2
-dt_wmt[stage == 3, 
-       .(MeanAcc = mean(acc),
-         MeanRT = mean(rt)),
-       by = .(sub, cond)] %>% 
-  ggplot(aes(x = cond, y = MeanAcc)) +
-  geom_violin() +
-  geom_point(position = position_jitter(width=.25)) + 
-  stat_summary(fun.data = "mean_cl_normal", 
-               geom = "pointrange", 
-               position = position_dodge(width = .9), 
-               linewidth = 1, 
-               size = mk_sz/2) +
-  theme_minimal() +
-  scale_x_discrete(labels = c("Neither", "Other ")) +
-  labs(title = "", x = "Context", y = "Proportion correct") +
-  theme(
-    plot.title = element_text(size = label_sz),
-    axis.text.x = element_text(size = label_sz), 
-    axis.text.y = element_text(size = label_sz), 
-    axis.title.x = element_text(size = label_sz), 
-    axis.title.y = element_text(size = label_sz), 
-    legend.title = element_text(size = label_sz),
-    legend.text = element_text(size = label_sz),
-  )
+# label_sz <- 20
+# mk_sz <- 2
+# dt_wmt[stage == 3, 
+#        .(MeanAcc = mean(acc),
+#          MeanRT = mean(rt)),
+#        by = .(sub, cond)] %>% 
+#   ggplot(aes(x = cond, y = MeanAcc)) +
+#   geom_violin() +
+#   geom_point(position = position_jitter(width=.25)) + 
+#   stat_summary(fun.data = "mean_cl_normal", 
+#                geom = "pointrange", 
+#                position = position_dodge(width = .9), 
+#                linewidth = 1, 
+#                size = mk_sz/2) +
+#   theme_minimal() +
+#   scale_x_discrete(labels = c("Neither", "Other ")) +
+#   labs(title = "", x = "Context", y = "Proportion correct") +
+#   theme(
+#     plot.title = element_text(size = label_sz),
+#     axis.text.x = element_text(size = label_sz), 
+#     axis.text.y = element_text(size = label_sz), 
+#     axis.title.x = element_text(size = label_sz), 
+#     axis.title.y = element_text(size = label_sz), 
+#     legend.title = element_text(size = label_sz),
+#     legend.text = element_text(size = label_sz),
+#   )
 
