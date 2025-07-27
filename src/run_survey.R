@@ -8,7 +8,7 @@ library(tidyverse)
 library(magrittr)
 
 ### settings
-exp <- 'exp-flex' #'exp-multi' #'exp-flex'
+exp <- 'exp-multi' #'exp-multi' #'exp-flex'
 
 ### set paths
 exp_path <- str_glue("data/{exp}/")
@@ -35,39 +35,43 @@ dt_ffmq <- fread(exp_path + 'FFMQ.csv')
 dt_ffmq %<>% 
   rename(sub = SUBID_1) %>%
   rename_with(~ paste0("Q", seq(1,39)), starts_with("FFMQ")) %>%
-  filter(Finished == 'True' & sub %in% seq(1,100)) %>% 
+  filter(Finished %in% c('True', 1) & sub %in% seq(1,100)) %>% 
   select(c(sub, Q1:Q39))
 
-# cols <- c('sub', paste0('FFMQ_B1_', seq(1,20)), paste0('FFMQ_B2_', seq(1,12)))
-# dt_ffmq <- dt_ffmq[Finished == 'True' & sub %in% seq(1,100), ..cols]
-
-# convert text labels to numeric scores for all response variables
+# score responses - if necessary convert text responses to numeric, 
+# and reverse score relevant items
 dt_ffmq %<>% mutate(
   across(
     all_of(reverse_score), ~ # reverse score relevant questions
     case_when( 
-      . == "Never or very rarely true" ~ 5,
-      . == "Rarely true" ~ 4,
-      . == "Sometimes true" ~ 3,
-      . == "Often true" ~ 2,
-      . == "Very often or always true" ~ 1
+      (. == "Never or very rarely true") | (. == 1) ~ 5,
+      (. == "Rarely true") | (. == 2) ~ 4,
+      (. == "Sometimes true") | (. == 3) ~ 3,
+      (. == "Often true") | (. == 4) ~ 2,
+      (. == "Very often or always true") | (. == 5) ~ 1
       )
     )
   ) %>% mutate(
   across(
     -all_of(c(reverse_score, 'sub')), ~ # score everything else 
       case_when( 
-        . == "Never or very rarely true" ~ 1,
-        . == "Rarely true" ~ 2,
-        . == "Sometimes true" ~ 3,
-        . == "Often true" ~ 4,
-        . == "Very often or always true" ~ 5
+        (. == "Never or very rarely true") | (. == 1) ~ 1,
+        (. == "Rarely true") | (. == 2) ~ 2,
+        (. == "Sometimes true") | (. == 3) ~ 3,
+        (. == "Often true") | (. == 4) ~ 4,
+        (. == "Very often or always true") | (. == 5) ~ 5
       )
     )
   )
 
-### calculate total scores for each sub-scale and whole scale 
-dt_ffmq %<>% rowwise() %>% 
+### calculate total scores for each sub-scale and whole scale. 
+# Note: Below I calculated two total scores - 1 with the observing sub-scale 
+# included, and 1 without the observing sub-scale included. The authors of the 
+# scale recommend omitting the observing sub-scale when calculating total scores 
+# in non-meditating samples as this sub-scale has been shown to be different 
+# between meditating and non-meditating samples. 
+dt_ffmq %<>% 
+  rowwise() %>% 
   mutate(
     observing = sum(across(all_of(observing))),
     describing = sum(across(all_of(describing))),
@@ -75,7 +79,7 @@ dt_ffmq %<>% rowwise() %>%
     nonjudging = sum(across(all_of(nonjudging))),
     nonreactivity = sum(across(all_of(nonreactivity))),
     total_w_observing = sum(across(starts_with('Q'))),
-    total = total_w_observing - sum(across(all_of(observing))) 
+    total_wout_observing = total_w_observing - observing
 )
 
 ### save data file
