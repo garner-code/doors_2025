@@ -1,0 +1,73 @@
+{
+  "sub": {
+    "LongName": "subject number",
+    "Description": "subject ID",
+    "Levels":""
+  },
+  "ses":{
+    "LongName": "session",
+    "Description": "phase of the experiment",
+    "Levels": {
+      "1": "learning",
+      "2": "training",
+      "3": "test",
+      "4": "initial working memory test"
+    }
+  },
+  "switch": {
+    "LongName": "",
+    "Description": "within-subjects trial type",
+    "Levels": {
+      "0": "nonswitch",
+      "1": "switch"
+    }
+   }, 
+   "train_type": {
+    "LongName": "",
+    "Description": "between-subject training condition",
+    "Levels": {
+      "1": "high switch rate (30%)",
+      "2": "low switch rate (5%)"
+    }
+   }, 
+   "accuracy_mean": {
+    "LongName": "",
+    "Description": "overall mean response accuracy, proportion of task-relevant door selections relative to total number of door selections on each trial",
+    "Levels": ""
+   }, 
+   "setting_errors_mean": {
+    "LongName": "",
+    "Description": "mean proportion of door selections belonging to the other context relative to total number of door selections on each trial",
+    "Levels": ""
+   }, 
+   "general_errors_mean": {
+    "LongName": "",
+    "Description": "mean proportion of door selections belonging to neither context relative to total number of door selections on each trial",
+    "Levels": ""
+   }, 
+   "setting_sticks_mean": {
+    "LongName": "",
+    "Description": "mean proportion of door selections belonging to the other context following a task context change (i.e., on switch trials) before the first door selection belong to the current context, relative to total number of door selections on each trial",
+    "Levels": ""
+   }, 
+   "setting_slips_mean": {
+    "LongName": "",
+    "Description": "mean proportion of door selections belonging to the other context following the first correct door selection from the current context, relative to total number of door selections on each trial",
+    "Levels": ""
+   },
+   "rt_first_correct_mean": {
+    "LongName": "",
+    "Description": "mean response time for the first correct door selection for the current context",
+    "Levels": ""
+   },
+   "rt_subs_correct_mean": {
+    "LongName": "",
+    "Description": "mean response time for the all subsequent correct door selections after for the current context",
+    "Levels": ""
+   }, 
+   "rt_post_error_mean": {
+    "LongName": "",
+    "Description": "mean response time for the correct door selections for the current context following an error",
+    "Levels": ""  
+   }
+ }
