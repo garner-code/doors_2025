@@ -35,13 +35,12 @@ write_csv(dt_wmt, fln)
 dt_wmt_avg <- dt_wmt[, 
                      .(accuracy_mean = mean(acc), 
                        rt_mean = mean(rt)),
-                     by = .(sub, stage, context, cond)
+                     by = .(sub, stage, cond)
 ]
 
 ### save data file
 fln <- file.path("res", paste(paste(exp, "mts_avg", sep = "_"), ".csv", sep = ""))
 write_csv(dt_wmt_avg, fln)
-
 
 ### calculate averages
 # dt_wmt_avg[stage == 4, 

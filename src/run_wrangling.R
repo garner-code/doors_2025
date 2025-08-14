@@ -134,6 +134,16 @@ write_csv(res, fnl)
 
 # by subject - for the data that the honours analysis will be applied to
 #   grouping by subsession
+
+# res <- read_csv(fnl)
+
+# calculcate setting sticks and setting slips as proportion of setting errors
+res <- res %>% 
+  mutate(setting_sticks = replace_na(setting_sticks, 0),
+         setting_slips = replace_na(setting_slips, 0)) %>% 
+  mutate(setting_sticks_pe = setting_sticks*setting_errors,
+         setting_slips_pe = setting_slips*setting_errors)
+
 if (exp == 'exp-flex'){
   
   res_ss <- res %>%
@@ -142,7 +152,9 @@ if (exp == 'exp-flex'){
     summarise(
       across(
         .cols = where(is.numeric),
-        .fns = list(mean = ~mean(.x, na.rm = TRUE)),
+        .fns = list(mean = ~mean(.x, na.rm = TRUE),
+                    sd = ~sd(.x, na.rm = TRUE),
+                    se = ~sd(.x, na.rm = TRUE)/sqrt(n())),
         .names = "{.col}_{.fn}"
       )
     ) %>%
@@ -165,7 +177,9 @@ if (exp == 'exp-flex'){
     summarise(
       across(
         .cols = where(is.numeric),
-        .fns = list(mean = ~mean(.x, na.rm = TRUE)),
+        .fns = list(mean = ~mean(.x, na.rm = TRUE),
+                    sd = ~sd(.x, na.rm = TRUE),
+                    se = ~sd(.x, na.rm = TRUE)/sqrt(n())),
         .names = "{.col}_{.fn}"
       )
     ) %>%

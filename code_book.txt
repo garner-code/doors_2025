@@ -47,7 +47,7 @@
    }, 
    "setting_sticks_mean": {
     "LongName": "",
-    "Description": "mean proportion of door selections belonging to the other context following a task context change (i.e., on switch trials) before the first door selection belong to the current context, relative to total number of door selections on each trial",
+    "Description": "mean proportion of door selections belonging to the other context following a task context change before the first door selection belong to the current context, relative to total number of door selections on each trial",
     "Levels": ""
    }, 
    "setting_slips_mean": {
