@@ -26,8 +26,8 @@
     "LongName": "",
     "Description": "between-subject training condition",
     "Levels": {
-      "1": "high switch rate (30%)",
-      "2": "low switch rate (5%)"
+      "1": "low switch rate (5%)",
+      "2": "high switch rate (30%)"
     }
    }, 
    "accuracy_mean": {

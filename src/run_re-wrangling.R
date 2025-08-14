@@ -41,11 +41,11 @@ avg_flex[, ':=' (LISAS_rt_fst_cor = rt_first_correct_mean + (setting_sticks_pe_m
 
 # rename factor levels
 avg_flex[, switch := ifelse(switch==0, 'non-switch', 'switch')]
-avg_flex[, train_type := ifelse(train_type==1, 'variable', 'stable')]
+avg_flex[, train_type := ifelse(train_type==1, 'stable', 'variable')]
 avg_flex[, ses := ifelse(ses==2, 'training', 'testing')]
 avg_flex_ss[, subses := ifelse(subses==1, 'first', 'last')]
 avg_flex_ss[, switch := ifelse(switch==0, 'non-switch', 'switch')]
-avg_flex_ss[, train_type := ifelse(train_type==1, 'variable', 'stable')]
+avg_flex_ss[, train_type := ifelse(train_type==1, 'stable', 'variable')]
 avg_flex_ss[, ses := ifelse(ses==2, 'training', 'testing')]
 
 # reshape data frame
@@ -87,7 +87,7 @@ mts_multi <- fread('res/exp-multi_mts_avg.csv')
 # rename factor levels
 # avg_multi[, subses := ifelse(subses==1, 'first', 'last')]
 avg_multi[, switch := ifelse(switch==0, 'non-switch', 'switch')]
-avg_multi[, train_type := ifelse(train_type==1, 'variable', 'stable')]
+avg_multi[, train_type := ifelse(train_type==1, 'stable', 'variable')]
 avg_multi[, ses := ifelse(ses==2, 'training', 'testing')]
 
 # fill in missing data - if no setting errors, replace NaN values with 0 for setting sticks/slips
@@ -103,16 +103,20 @@ avg_multi_train <- dcast.data.table(avg_multi,
                                 subset = .(ses=='training' & switch=='non-switch')) # long to wide for training session
 
 ## need to complete when variables are decided
-# avg_multi_test <- dcast.data.table(avg_multi, 
-#                               sub + train_type + ses + multi_trial ~ multi_cond, 
-#                               value.var = c(), 
-#                               subset = .(ses=='testing')) # long to wide for test session
+avg_multi_test <- dcast.data.table(avg_multi,
+                              sub + train_type + ses ~ multi_cond,
+                              value.var = c('accuracy_mean'),
+                              subset = .(ses=='testing'),
+                              fun.aggregate = mean) # long to wide for test session
+setnames(avg_multi_test, 
+         old=c('neither', 'none', 'other'), 
+         new=c('multi_cond_neither', 'multi_cond_none', 'multi_cond_other'))
 
-# avg_multi_wide <- rbindlist(list(avg_multi_train, avg_multi_test), fill=T) # combine into 1 data frame
+avg_multi_wide <- rbindlist(list(avg_multi_train, avg_multi_test), fill=T) # combine into 1 data frame
 
 # save data file
-fln <- file.path("res", paste(paste(exp, "avg-wide_train", sep = "_"), ".csv", sep = ""))
-write_csv(avg_multi_train, fln)
+fln <- file.path("res", paste(paste(exp, "avg-wide", sep = "_"), ".csv", sep = ""))
+write_csv(avg_multi_wide, fln)
 
 # reshape working memory task data
 avg_multi_mts_wide <- dcast.data.table(mts_multi,
