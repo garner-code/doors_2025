@@ -21,7 +21,7 @@ source(file.path("src", "join_multi_data.R"))
 # !you will want to update these settings a lot during piloting, when the task code or the way you
 # test changes, or when you test participants on different subsets of the task phases
 version <- ''
-exp <- 'exp-flex' #'exp-multi' #'exp-flex'
+exp <- 'exp-multi' #'exp-flex'
 sess <- c("ses-learn","ses-learn2","ses-train","ses-test") # these sessions are common to 
 # both experiments so are the only 2 that need to be listed here. the sessions from the 
 # multitask experiment are dealt with in the code below
@@ -38,7 +38,7 @@ if (!dir.exists(file.path(project_path, "res"))) {
 
 # !you will need to change the data path to match the location of OneDrive on your personal
 # computer
-file_path <- "data"
+file_path <- "~/Documents/projects/doors_2025_analysis_multi/data"
 exp_path <- str_glue("/{exp}/{version}")
 data_path <- file.path(file_path + exp_path)
 

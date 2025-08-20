@@ -8,10 +8,10 @@ library(tidyverse)
 library(magrittr)
 
 ### settings
-exp <- 'exp-flex' #'exp-multi' #'exp-flex'
+exp <- 'exp-multi' #'exp-multi' #'exp-flex'
 
 ### set paths
-exp_path <- str_glue("data/{exp}/")
+exp_path <- str_glue("~/Documents/projects/doors_2025_analysis_multi/data/{exp}/")
 # file_path <- file.path(exp_path)
 if (!dir.exists(exp_path)) {
   stop(paste0(exp_path, " does not exist"))
@@ -87,6 +87,8 @@ dt_ffmq %<>%
     total_w_observing = sum(across(starts_with('Q'))),
     total_wout_observing = total_w_observing - observing
 )
+
+dt_ffmq <- dt_ffmq %>% select(sub, total_wout_observing)
 
 ### save data file
 fln <- file.path("res", paste(paste(exp, "svy", sep = "_"), ".csv", sep = ""))

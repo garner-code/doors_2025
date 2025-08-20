@@ -1,5 +1,6 @@
 # Caleb Stone, July 2025: this script extracts, formats, and summarises data 
 # from the working memory task of the 'doors' paradigm.  
+rm(list=ls())
 
 ### load libraries
 library(data.table)
@@ -12,11 +13,12 @@ library(ggsci)
 exp <- "exp-multi"
 
 ### set paths
-exp_path <- str_glue("data/{exp}/")
+exp_path <- str_glue("~/Documents/projects/doors_2025_analysis_multi/data/{exp}/")
 # file_path <- file.path(exp_path)
 if (!dir.exists(exp_path)) {
   stop(paste0(exp_path, " does not exist"))
 }
+
 
 ### load behavioural data for wmt trials
 pat_wmt <- '.*(mts_beh.tsv)'
