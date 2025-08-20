@@ -21,7 +21,7 @@ source(file.path("src", "join_multi_data.R"))
 # !you will want to update these settings a lot during piloting, when the task code or the way you
 # test changes, or when you test participants on different subsets of the task phases
 version <- ''
-exp <- 'exp-multi' #'exp-multi' #'exp-flex'
+exp <- 'exp-flex' #'exp-multi' #'exp-flex'
 sess <- c("ses-learn","ses-learn2","ses-train","ses-test") # these sessions are common to 
 # both experiments so are the only 2 that need to be listed here. the sessions from the 
 # multitask experiment are dealt with in the code below
@@ -38,7 +38,7 @@ if (!dir.exists(file.path(project_path, "res"))) {
 
 # !you will need to change the data path to match the location of OneDrive on your personal
 # computer
-file_path <- "~/Downloads/hons-2025"
+file_path <- "data"
 exp_path <- str_glue("/{exp}/{version}")
 data_path <- file.path(file_path + exp_path)
 
@@ -134,6 +134,16 @@ write_csv(res, fnl)
 
 # by subject - for the data that the honours analysis will be applied to
 #   grouping by subsession
+
+# res <- read_csv(fnl)
+
+# calculcate setting sticks and setting slips as proportion of setting errors
+res <- res %>% 
+  mutate(setting_sticks = replace_na(setting_sticks, 0),
+         setting_slips = replace_na(setting_slips, 0)) %>% 
+  mutate(setting_sticks_pe = setting_sticks*setting_errors,
+         setting_slips_pe = setting_slips*setting_errors)
+
 if (exp == 'exp-flex'){
   
   res_ss <- res %>%
@@ -142,7 +152,9 @@ if (exp == 'exp-flex'){
     summarise(
       across(
         .cols = where(is.numeric),
-        .fns = list(mean = ~mean(.x, na.rm = TRUE)),
+        .fns = list(mean = ~mean(.x, na.rm = TRUE),
+                    sd = ~sd(.x, na.rm = TRUE),
+                    se = ~sd(.x, na.rm = TRUE)/sqrt(n())),
         .names = "{.col}_{.fn}"
       )
     ) %>%
@@ -165,7 +177,9 @@ if (exp == 'exp-flex'){
     summarise(
       across(
         .cols = where(is.numeric),
-        .fns = list(mean = ~mean(.x, na.rm = TRUE)),
+        .fns = list(mean = ~mean(.x, na.rm = TRUE),
+                    sd = ~sd(.x, na.rm = TRUE),
+                    se = ~sd(.x, na.rm = TRUE)/sqrt(n())),
         .names = "{.col}_{.fn}"
       )
     ) %>%

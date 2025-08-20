@@ -31,8 +31,8 @@ get_rts <- function(data, experiment, multi_data){
         n = n(), 
         .groups='drop') 
     data <- inner_join(data, data_sum %>% mutate(upper = mu_rt + (sd_crit*sd_rt)), by=c('sub', 'ses', 'switch', 'rt_idx')) %>%
-      filter(rt <= upper) 
-    
+      filter(rt <= upper | is.na(upper)) # added |is.na(upper) to prevent cases when upper can't be calculated
+
     # now summarise
     data <- data %>% group_by(sub, ses, subses, switch, t, context, train_type) %>%
       summarise(
