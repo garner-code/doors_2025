@@ -39,6 +39,10 @@ avg_flex[, ':=' (LISAS_rt_fst_cor = rt_first_correct_mean + (setting_sticks_pe_m
 ][is.nan(LISAS_rt_fst_cor), LISAS_rt_fst_cor := rt_first_correct_mean # fill in missing LISAS scores with original values
 ][is.nan(LISAS_rt_sub_cor), LISAS_rt_sub_cor := rt_subs_correct_mean]
 
+# save output file
+fln <- file.path("res", paste(paste(exp, "avg", sep = "_"), ".csv", sep = ""))
+write_csv(avg_flex, fln)
+
 # rename factor levels
 avg_flex[, switch := ifelse(switch==0, 'non-switch', 'switch')]
 avg_flex[, train_type := ifelse(train_type==1, 'stable', 'variable')]
@@ -90,6 +94,12 @@ avg_multi[, switch := ifelse(switch==0, 'non-switch', 'switch')]
 avg_multi[, train_type := ifelse(train_type==1, 'stable', 'variable')]
 avg_multi[, ses := ifelse(ses==2, 'training', 'testing')]
 
+mts_multi <- mts_multi[unique(avg_multi[, .(sub, train_type)]), on='sub']
+mts_multi[, cond := ifelse(cond=='nc', 'neither', 'other')]
+mts_multi[, stage := ifelse(stage=='3', 'testing', 'initial')]
+mts_multi[, train_type := ifelse(train_type==1, 'stable', 'variable')]
+setnames(mts_multi, 'stage', 'ses') # rename stage to ses 
+
 # fill in missing data - if no setting errors, replace NaN values with 0 for setting sticks/slips
 # avg_multi[setting_errors_mean == 0, ':=' (setting_sticks_mean = 0,
 #                                           setting_slips_mean = 0)]
@@ -119,13 +129,11 @@ fln <- file.path("res", paste(paste(exp, "avg-wide", sep = "_"), ".csv", sep = "
 write_csv(avg_multi_wide, fln)
 
 # reshape working memory task data
-avg_multi_mts_wide <- dcast.data.table(mts_multi,
-                                       sub + stage ~ cond,
-                                       value.var = c('accuracy_mean', 'rt_mean'),
-                                       fun.aggregate=mean) # long to wide for working memory task data
-avg_multi_mts_wide <- avg_multi_mts_wide[dc1[, .(sub, train_type)], on='sub'] # get train_type information
-setnames(avg_multi_mts_wide, 'stage', 'ses') # rename stage to ses 
+mts_multi_wide <- dcast.data.table(mts_multi,
+                                   sub + ses + train_type ~ cond,
+                                   value.var = c('accuracy_mean', 'rt_mean')) # long to wide for working memory task data
+
 
 # save wokring memory data file
 fln <- file.path("res", paste(paste(exp, "mts_avg-wide", sep = "_"), ".csv", sep = ""))
-write_csv(avg_multi_mts_wide, fln)
+write_csv(mts_multi_wide, fln)
